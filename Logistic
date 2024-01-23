@@ -1,0 +1,62 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import math
+import pandas as pd
+from scipy.optimize import curve_fit
+import seaborn as sns
+from scipy import stats
+
+plt.rc('font',family='Times New Roman')
+
+def logistic_increase_function(t,P0,r):
+    K=1
+    exp_value=np.exp(r*(t))
+    return (K*exp_value*P0)/(K+(exp_value-1)*P0)
+
+def logistic_increase_function1(t,K,P0,r):
+    exp_value=np.exp(r*(t))
+    return (K*exp_value*P0)/(K+(exp_value-1)*P0)
+
+def __sst(y_no_fitting):
+    y_mean = sum(y_no_fitting) / len(y_no_fitting)
+    s_list =[(y - y_mean)**2 for y in y_no_fitting]
+    sst = sum(s_list)
+    return sst
+
+def __ssr(y_fitting, y_no_fitting):
+    y_mean = sum(y_no_fitting) / len(y_no_fitting)
+    s_list =[(y - y_mean)**2 for y in y_fitting]
+    ssr = sum(s_list)
+    return ssr
+
+def goodness_of_fit(y_fitting, y_no_fitting):
+    SSR = __ssr(y_fitting, y_no_fitting)
+    SST = __sst(y_no_fitting)
+    rr = SSR /SST
+    return rr
+
+
+inputfile0= "Logistic.xlsx"
+data0=pd.read_excel(inputfile0,sheet_name=0,header=None,skiprows=1)
+data=data0.values
+y2=data[:,-1]
+t=np.arange(0,21)
+popt, pcov = curve_fit(logistic_increase_function, t, y2)
+# popt, pcov = curve_fit(logistic_increase_function1, t, y2)#无k
+print(popt)
+y2_predict = logistic_increase_function(t,popt[0],popt[1])
+# y2_predict = logistic_increase_function1(t,popt[0],popt[1],popt[2])
+rr=goodness_of_fit(y2_predict,y2)
+print("rr:",rr)
+future=np.arange(-20,61)
+future_predict=logistic_increase_function(future,popt[0],popt[1])
+# future_predict= logistic_increase_function1(future,popt[0],popt[1],popt[2])
+print(future_predict)
+# print(future)
+fig, ax = plt.subplots()
+plt.scatter(t, y2, color='b',label='raw data',s=20)
+# plt.plot(t, y2_predict, 'r-',label='best_vals')
+plt.plot(future,future_predict,'k--',label='fitting curve')
+plt.show()
+output2=pd.DataFrame(future_predict)
+output2.to_excel(excel_writer=r"logistic_81.xlsx")
